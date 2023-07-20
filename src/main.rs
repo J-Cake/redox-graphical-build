@@ -6,8 +6,10 @@ use vizia::prelude::*;
 
 mod config;
 mod error;
+mod builder;
 
 pub use crate::error::Error;
+use crate::builder::Builder;
 
 #[derive(Lens)]
 struct AppState {
@@ -82,8 +84,8 @@ fn main() {
         AppState { config: None }.build(cx);
         
         Binding::new(cx, AppState::config, |cx, item| {
-            if let Some(item) = item.get(cx) {
-                println!("{:?}", item);
+            if let Some(config) = item.get(cx) {
+                Builder::new(cx, config);
             } else {
                 HStack::new(cx, |cx| {
                     Button::new(cx, |event| event.spawn(|cx| {

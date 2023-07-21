@@ -1,4 +1,7 @@
 use vizia::prelude::*;
+use vizia::icons::*;
+
+use crate::components::*;
 
 pub struct Builder {
     config: crate::config::BuildConfig
@@ -13,7 +16,25 @@ impl View for Builder {
 impl Builder {
     pub fn new(cx: &mut Context, config: crate::config::BuildConfig) -> Handle<Self> {
         Self { config }.build(cx, |cx| {
-            Label::new(cx, "Hello World!");
+            VStack::new(cx, |cx| {
+                HStack::new(cx, |cx| {
+                    Button::new(cx, |event| {}, |cx| HStack::new(cx, |cx| {
+                        Label::new(cx, ICON_PLAYER_PLAY);
+                        Label::new(cx, "Build");
+                    }))
+                        .class("primary");
+                    
+                    Button::new(cx, |event| {}, |cx| HStack::new(cx, |cx| {
+                        Label::new(cx, ICON_PENCIL);
+                        Label::new(cx, "Edit");
+                    }))
+                        .class("secondary");
+                })
+                    .height(Auto);
+                
+                Table::new(cx, ["Status", "Job", "Elapsed"])
+                    .class("field");
+            });
         })
     }
 }

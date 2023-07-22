@@ -1,10 +1,11 @@
 use vizia::prelude::*;
 use vizia::icons::*;
 
+use crate::AppEvent;
 use crate::components::*;
 
 pub struct Builder {
-    config: crate::config::BuildConfig
+    config: crate::config::BuildConfig,
 }
 
 impl View for Builder {
@@ -24,7 +25,9 @@ impl Builder {
                     }))
                         .class("primary");
                     
-                    Button::new(cx, |event| {}, |cx| HStack::new(cx, |cx| {
+                    Button::new(cx, |event| {
+                        
+                    }, |cx| HStack::new(cx, |cx| {
                         Label::new(cx, ICON_PENCIL);
                         Label::new(cx, "Edit");
                     }))

@@ -11,3 +11,4 @@ native-dialog = { git = "https://github.com/native-dialog-rs/native-dialog-rs.gi
 
 ron = "0.8"
 serde = { version = "1", features = ["derive"] }
+winit = "0.28.6"

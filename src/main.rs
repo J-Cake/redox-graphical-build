@@ -1,5 +1,6 @@
 use std::fs::File;
 use std::io::Read;
+use std::path::PathBuf;
 use std::sync::Arc;
 use native_dialog::MessageDialog;
 use vizia::prelude::*;
@@ -8,13 +9,14 @@ mod config;
 mod components;
 mod error;
 mod builder;
+mod edit;
 
 pub use crate::error::Error;
 use crate::builder::Builder;
 
 #[derive(Lens)]
 struct AppState {
-    config: Option<config::BuildConfig>
+    config: Option<config::BuildConfig>,
 }
 
 #[derive(Clone)]
@@ -36,7 +38,7 @@ impl Model for AppState {
                     .set_text(&err.to_string())
                     .show_alert()
                     .unwrap());
-            }
+            },
         }
     }
 }
@@ -83,57 +85,8 @@ fn load_file(cx: &mut ContextProxy) -> Result<(), Error> {
 fn main() {
     Application::new(|cx| {
         AppState { config: None }.build(cx);
-        
-        cx.add_stylesheet(r#"
-            :root {
-                background-color: #f1f1f1;
-                font-family: "Segoe UI", Arial, sans-serif;
-            }
 
-            button {
-                height: 24px;
-                border-width: 0px;
-                border-radius: 0px;
-                outline-width: 0px;
-                background-color: #d4d4d4;
-                color: #454545;
-                transition: background-color 0ms;
-                font-size: small;
-                col-between: 3px;
-                row-between: 2px;
-            }
-            
-            button.primary {
-                background-color: #569de8;
-                color: #eaeaea;
-            }
-            
-            button, button:hover, button:over, button:active, button:focus-visible {
-                border: none;
-                outline: none;
-            }
-            
-            button.primary:hover, button.primary:over {
-                background-color: #4175ab;                
-            }
-            
-            .field {
-                border: 1px solid #8d8d8d;
-                height: 1s;
-                width: 1s;
-                top: 4px;
-                left: 4px;
-                right: 4px;
-                bottom: 4px;
-            }
-            
-            table > .table-header > .table-header-column {
-                font-size: small;
-                color: #666666;
-                background-color: #b4b4b4;
-                height: auto;
-            }
-        "#)
+        cx.add_stylesheet(PathBuf::from("C:\\Users\\jasc\\redox-graphical-build\\theme.css"))
             .expect("Failed to load stylesheet");
             
         Binding::new(cx, AppState::config, |cx, item| {

@@ -1,6 +1,6 @@
 :root {
     background-color: #f1f1f1;
-    font-family: "Segoe UI", Arial, sans-serif;
+    /* font-family: "Raleway"; */
 }
 
 button {
@@ -40,9 +40,18 @@ button.primary:hover, button.primary:over {
     bottom: 4px;
 }
 
-table > .table-header > .table-header-column {
+table > table-row, table > .table-contents > table-row {
+    font-size: small;
+    height: auto;
+}
+
+table > table-row.table-header > .table-header-column, table > table-row.table-header {
     font-size: small;
     color: #666666;
     background-color: #b4b4b4;
     height: auto;
+}
+
+table > .table-contents > table-row:nth-child(odd) {
+    background-color: rgba(40, 40, 40, 70%);
 }

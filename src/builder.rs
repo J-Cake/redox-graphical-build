@@ -1,7 +1,6 @@
 use vizia::prelude::*;
 use vizia::icons::*;
 
-use crate::AppEvent;
 use crate::components::*;
 
 pub struct Builder {
@@ -35,7 +34,13 @@ impl Builder {
                 })
                     .height(Auto);
                 
-                Table::new(cx, ["Status", "Job", "Elapsed"])
+                Table::new(cx, ["Status", "Job", "Elapsed"], |cx, index| {
+                    Label::new(cx, "Hello World");
+                    Label::new(cx, "Gbye");
+                    Label::new(cx, "Test");
+                    
+                    index < 5
+                })
                     .class("field");
             });
         })

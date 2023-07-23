@@ -86,7 +86,7 @@ fn main() {
     Application::new(|cx| {
         AppState { config: None }.build(cx);
 
-        cx.add_stylesheet(PathBuf::from("C:\\Users\\jasc\\redox-graphical-build\\theme.css"))
+        cx.add_stylesheet(PathBuf::from("./theme.css"))
             .expect("Failed to load stylesheet");
             
         Binding::new(cx, AppState::config, |cx, item| {

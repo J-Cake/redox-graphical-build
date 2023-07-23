@@ -5,28 +5,30 @@ use std::sync::Arc;
 use native_dialog::MessageDialog;
 use vizia::prelude::*;
 
-mod config;
 mod components;
 mod error;
-mod builder;
+mod build;
 mod edit;
 
 pub use crate::error::Error;
-use crate::builder::Builder;
+use crate::build::Builder;
 
 #[derive(Lens)]
 struct AppState {
-    config: Option<config::BuildConfig>,
+    config: Option<build::BuildConfig>,
+    started: Option<Instant>,
 }
 
 #[derive(Clone)]
 pub enum AppEvent {
-    LoadConfig(config::BuildConfig),
-    Error(Arc<Error>)
+    LoadConfig(build::BuildConfig),
+    Error(Arc<Error>),
+    BuildStarted(bool),
+    Refresh
 }
 
 impl Model for AppState {
-    fn event(&mut self, _cx: &mut EventContext, event: &mut Event) {
+    fn event(&mut self, cx: &mut EventContext, event: &mut Event) {
         match event.take() {
             None => return,
             Some(AppEvent::LoadConfig(config)) => self.config = Some(config.clone()),
@@ -39,6 +41,8 @@ impl Model for AppState {
                     .show_alert()
                     .unwrap());
             },
+            Some(AppEvent::BuildStarted(started)) => self.started = if started { Some(Instant::now()) } else { None },
+            Some(AppEvent::Refresh) => {}
         }
     }
 }
@@ -46,11 +50,11 @@ impl Model for AppState {
 struct FallbackScreen {}
 impl View for FallbackScreen {}
 
-fn load_file(cx: &mut ContextProxy) -> Result<(), Error> {
+fn load_file(cx: &mut ContextProxy) -> Result<(), Error> {    
     if let Ok(res) = native_dialog::FileDialog::new()
         .set_title("Open Configuration")
         .set_location("~/")
-        .add_filter("Redox OS Build configuration", &["ron"])
+        .add_filter("Redox OS Build configuration", &["ron", "json", "json5", "toml", "cson"])
         .show_open_single_file() {
             
         let Some(path) = res else { return Ok(()); };
@@ -84,7 +88,15 @@ fn load_file(cx: &mut ContextProxy) -> Result<(), Error> {
 
 fn main() {
     Application::new(|cx| {
-        AppState { config: None }.build(cx);
+        AppState { 
+            config: None, 
+            started: None
+        }.build(cx);
+        
+        cx.spawn(|cx| loop {
+            std::thread::sleep(Duration::from_millis(1000));
+            cx.emit(AppEvent::Refresh).unwrap_or_default();
+        });
 
         cx.add_stylesheet(PathBuf::from("./theme.css"))
             .expect("Failed to load stylesheet");
@@ -105,6 +117,7 @@ fn main() {
         });
     })
     .title("Redox Builder")
-    .inner_size((720, 480))
+    .inner_size((480, 320))
+    .min_inner_size(Some((220, 160)))
     .run();
 }

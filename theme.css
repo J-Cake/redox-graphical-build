@@ -1,23 +1,36 @@
 :root {
     background-color: #f1f1f1;
-    /* font-family: "Raleway"; */
+    /* font-family: "Poppins"; */
 }
 
 button {
     height: 24px;
-    border-width: 0px;
     border-radius: 0px;
     outline-width: 0px;
+    border: 1px solid #b4b4b4;
     background-color: #d4d4d4;
     color: #454545;
-    transition: background-color 0ms;
+    transition: background-color 0.15s;
     font-size: small;
     col-between: 3px;
     row-between: 2px;
+    top: 3px;
+    right: 3px;
+}
+
+button:first-of-type {
+    left: 3px;
 }
 
 button.primary {
-    background-color: #569de8;
+    background-color: #778590;
+    border: 1px #375A7E;
+    color: #eaeaea;
+}
+
+button.danger {
+    background-color: #90182E;
+    border: 1px #4B0C18;
     color: #eaeaea;
 }
 
@@ -26,8 +39,16 @@ button, button:hover, button:over, button:active, button:focus-visible {
     outline: none;
 }
 
-button.primary:hover, button.primary:over {
+button:hover, button:over, button:active {
+    background-color: #e7e7e7;
+}
+
+button.primary:hover, button.primary:over, button.primary:active {
     background-color: #4175ab;                
+}
+
+button.danger:hover, button.danger:over, button.danger:active {
+    background-color: #90182E;    
 }
 
 .field {
@@ -40,9 +61,13 @@ button.primary:hover, button.primary:over {
     bottom: 4px;
 }
 
-table > table-row, table > .table-contents > table-row {
+table table-row {
     font-size: small;
     height: auto;
+}
+
+table table-row > * {
+    width: 1s;
 }
 
 table > table-row.table-header > .table-header-column, table > table-row.table-header {
@@ -52,6 +77,26 @@ table > table-row.table-header > .table-header-column, table > table-row.table-h
     height: auto;
 }
 
-table > .table-contents > table-row:nth-child(odd) {
-    background-color: rgba(40, 40, 40, 70%);
+table > table-row.table-header > .table-header-column:not(:last-child) {
+    box-shadow: -1px 0px 0px 0px rgba(40, 40, 40, 40%) inset;
+}
+
+
+table > .table-contents > table-row:nth-child(odd), table-row.odd {
+    background-color: rgba(40, 40, 40, 5%);
+}
+
+table-row:not(.table-header) > * {
+    left: 2px;
+    right: 2px;
+}
+
+#status-bar {
+    height: auto;
+    background-color: rgba(40, 40, 40, 15%);
+    font-size: small;
+    color: #444444;
+    child-space: 3px;
+    
+    box-shadow: 0px 1px 0px 0px rgba(40, 40, 40, 20%) inset;    
 }

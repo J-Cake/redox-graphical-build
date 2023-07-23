@@ -10,5 +10,7 @@ vizia = { git = "https://github.com/vizia/vizia" }
 native-dialog = { git = "https://github.com/native-dialog-rs/native-dialog-rs.git" }
 
 ron = "0.8"
+serde_json = "1.0"
+toml = "0.7.6"
 serde = { version = "1", features = ["derive"] }
 winit = "0.28.6"

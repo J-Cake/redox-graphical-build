@@ -31,13 +31,14 @@ pub struct Table {
 }
 
 impl Table {
-    pub fn new<'a, Headers, Body>(cx: &mut Context, headers: Headers, mut body: Body) -> Handle<Self>
-    where
+    pub fn with_widths<'a, Headers, Body, Widths>(cx: &mut Context, headers: Headers, mut body: Body, widths: Widths) -> Handle<Self> 
+    where 
         Headers: IntoIterator<Item=&'a str>,
         Body: 'static + FnMut(&mut Context, usize, &mut dyn FnMut() -> Units) -> bool,
+        Widths: IntoIterator<Item=Units>
     {
+        let widths = Rc::new(widths.into_iter().collect());
         let headers = headers.into_iter().map(|i| i.to_owned()).collect::<Vec<String>>();
-        let widths = Rc::new(vec![Units::Percentage(100.0 / headers.len() as f32); headers.len()]);
         
         Self { 
             headers: headers.clone(),
@@ -49,16 +50,17 @@ impl Table {
                 let widths = widths;
                 
                 Row::new(cx, |cx| {
-                    for i in headers.iter() {
+                    for (a, i) in headers.iter().enumerate() {
                         HStack::new(cx, |cx| {
                             Label::new(cx, i)
                                 .width(Units::Stretch(1.0))
-                                .left(Units::Pixels(4.0))
+                                .left(Units::Pixels(2.0))
                                 .right(Units::Pixels(2.0));
                             Label::new(cx, ICON_CHEVRON_DOWN)
                                 .left(Units::Pixels(2.0))
-                                .right(Units::Pixels(4.0));
+                                .right(Units::Pixels(2.0));
                         })
+                            .width(widths[a])
                             .class("table-header-column");
                     }
                 }, Rc::clone(&widths))
@@ -84,6 +86,28 @@ impl Table {
                 })
                     .class("table-contents");
             })
+    }
+    
+    pub fn new<'a, Headers, Body>(cx: &mut Context, headers: Headers, body: Body) -> Handle<Self>
+    where
+        Headers: IntoIterator<Item=&'a str>,
+        Body: 'static + FnMut(&mut Context, usize, &mut dyn FnMut() -> Units) -> bool,
+    {
+        let mut len = 0usize;
+        let mut new_headers = vec![];
+        
+        for i in headers.into_iter() {
+            new_headers.push(i);
+            len += 1;
+        }
+        
+        let widths = vec![Units::Percentage(100.0 / len as f32); len];
+        Table::with_widths(cx, new_headers, body, widths)
+    }
+    
+    pub fn widths<Iter: IntoIterator<Item=Units>>(&mut self, items: Iter) -> &mut Self {
+        self.column_widths = Rc::new(items.into_iter().collect());
+        return self;
     }
 }
 

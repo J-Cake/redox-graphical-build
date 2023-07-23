@@ -52,7 +52,7 @@ impl Builder {
                         })
                         .height(Auto);
 
-                        Table::new(cx, ["Status", "Job", "Elapsed"], |cx, index, next_width| {
+                        Table::with_widths(cx, ["Status", "Job", "Elapsed"], |cx, index, next_width| {
                             Label::new(cx, "Hello World")
                                 .width(next_width());
                             Label::new(cx, "Doin' something")
@@ -61,7 +61,7 @@ impl Builder {
                                 .width(next_width());
                             
                             index >= 5
-                        })
+                        }, vec![Units::Auto, Units::Stretch(1.0), Units::Auto])
                             .class("field");
                         HStack::new(cx, |cx| {
                             RelativeTime::new(cx, AppState::started);
@@ -101,9 +101,11 @@ impl Builder {
                         .height(Auto);
 
                         VStack::new(cx, |cx| {
-                            Label::new(cx, "No build running");
+                            Label::new(cx, "No build running")
+                            .height(Units::Stretch(1.0));
                         })
-                        .height(Units::Stretch(1.0));
+                        .child_space(Stretch(1.0))
+                        .col_between(Pixels(20.0));
 
                         HStack::new(cx, |cx| {
                             RelativeTime::new(cx, AppState::started);

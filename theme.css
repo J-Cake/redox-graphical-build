@@ -86,11 +86,6 @@ table > .table-contents > table-row:nth-child(odd), table-row.odd {
     background-color: rgba(40, 40, 40, 5%);
 }
 
-table-row:not(.table-header) > * {
-    left: 2px;
-    right: 2px;
-}
-
 #status-bar {
     height: auto;
     background-color: rgba(40, 40, 40, 15%);

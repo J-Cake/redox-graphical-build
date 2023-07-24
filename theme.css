@@ -70,19 +70,23 @@ table table-row > * {
     width: 1s;
 }
 
-table > table-row.table-header > .table-header-column, table > table-row.table-header {
+table table-row.table-header table-header-column {
+    cursor: col-resize;
+}
+
+table table-row.table-header table-header-column, table table-row.table-header {
     font-size: small;
     color: #666666;
     background-color: #b4b4b4;
     height: auto;
 }
 
-table > table-row.table-header > .table-header-column:not(:last-child) {
+table table-row.table-header table-header-column:not(:last-child) {
     box-shadow: -1px 0px 0px 0px rgba(40, 40, 40, 40%) inset;
 }
 
 
-table > .table-contents > table-row:nth-child(odd), table-row.odd {
+table .table-contents > table-row:nth-child(odd), table-row.odd {
     background-color: rgba(40, 40, 40, 5%);
 }
 

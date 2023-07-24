@@ -1,5 +1,3 @@
-use std::thread::Thread;
-
 use vizia::icons::*;
 use vizia::prelude::*;
 
@@ -30,7 +28,6 @@ impl Builder {
         }, cx, |cx| {            
             Binding::new(cx, AppState::started, |cx, started| {
                 if let Some(started) = started.get(cx) {
-                    let started: Instant = started;
                     VStack::new(cx, |cx| {
                         HStack::new(cx, |cx| {
                             Button::new(cx, |e| e.emit(AppEvent::BuildStarted(false)), |cx| {
@@ -61,7 +58,7 @@ impl Builder {
                                 .width(next_width());
                             
                             index >= 5
-                        }, vec![Units::Auto, Units::Stretch(1.0), Units::Auto])
+                        }, vec![Units::Stretch(1.0); 3])
                             .class("field");
                         HStack::new(cx, |cx| {
                             RelativeTime::new(cx, AppState::started);

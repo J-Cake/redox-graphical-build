@@ -5,7 +5,7 @@ use std::rc::Rc;
 use vizia::{prelude::*, ICON_CHEVRON_DOWN};
 
 type WidthList = Vec<Width>;
-type Width = Arc<Mutex<Units>>;
+type Width = Units;
 
 struct Row(WidthList);
 impl Row {
@@ -30,7 +30,7 @@ impl View for Row {
 }
 
 pub enum TableEvent {
-    ResizeColumn { column: usize, new_size: Width },
+    ResizeColumn { column: usize, new_size: Units },
     Sort { column: usize },
     MoveColumn { column: usize, index: usize },
 }
@@ -56,6 +56,7 @@ impl View for Table {
         match event.take() {
             None => {}
             Some(TableEvent::ResizeColumn { column, new_size }) => {
+                println!("Resizing column {} to {:?}px", column, &new_size);
                 if let Some(column) = self.columns.get_mut(column) {
                     column.width = new_size;
                     cx.needs_relayout();
@@ -88,7 +89,7 @@ impl Table {
                     .enumerate()
                     .map(|(a, (width, heading))| Column {
                         heading,
-                        width: Arc::new(Mutex::new(width)),
+                        width,
                         sort_index: a,
                     })
                     .collect(),
@@ -100,16 +101,26 @@ impl Table {
 
                 Binding::new(cx, Self::columns, move |cx, widths| {
                     let body = Rc::clone(&body);
+                    let columns = widths.get(cx);
+                    let widths = Rc::new(columns.iter().map(|i| i.width).collect::<Vec<Units>>());
 
+                    let widths = Rc::clone(&widths);
                     Row::new(cx, |cx| {
                         List::new(cx, Self::columns, |cx, a, column| {
                             let column: Column = column.get(cx);
                             TableHeaderColumn::new(cx, column.heading)
-                                .width(*column.width.lock().unwrap());
-                            Splitter::new(cx, Column::width);
+                                .width(widths[a])
+                                .on_build(move |e| e.emit(TableEvent::ResizeColumn {
+                                    column: a,
+                                    new_size: Units::Pixels(e.bounds().w)
+                                }));
+                            Splitter::new(cx, column.width, move |e: &mut EventContext, width: Units| e.emit(TableEvent::ResizeColumn { 
+                                column: a, 
+                                new_size: width
+                            }));
                         })
                         .layout_type(LayoutType::Row);
-                    }, widths.get(cx).iter().map(|i: &Column| Arc::clone(&i.width)))
+                    }, Rc::clone(&widths).deref().clone())
                     .class("table-header");
 
                     ScrollView::new(cx, 0.0, 0.0, false, true, move |cx| {})
@@ -137,22 +148,22 @@ impl Table {
     }
 }
 
-struct Splitter<L: 'static> where L: Lens<Target=Width> {
-    width: L,
-    is_dragging: bool
+struct Splitter<OnUpdate: 'static> where OnUpdate: Fn(&mut EventContext, Units) {
+    width: Units,
+    is_dragging: bool,
+    on_update: OnUpdate
 }
-impl<L: 'static> View for Splitter<L> where L: 'static + Lens<Target=Width> {
+impl<OnUpdate: 'static> View for Splitter<OnUpdate> where OnUpdate: Fn(&mut EventContext, Units) {
     fn element(&self) -> Option<&'static str> {
         Some("table-splitter")
     }
     
     fn event(&mut self, cx: &mut EventContext, event: &mut Event) {
         event.map(|e, _| match e {
-            WindowEvent::MouseOver => println!("Mouse Over!"),
             WindowEvent::MouseDown(button) if *button == MouseButton::Left => {
-                println!("Mouse Down");
                 self.is_dragging = true;
                 cx.capture();
+                cx.lock_cursor_icon();
                 cx.focus_with_visibility(false);
                 cx.with_current(Entity::root(), |cx| {
                     cx.set_pointer_events(false);
@@ -160,32 +171,34 @@ impl<L: 'static> View for Splitter<L> where L: 'static + Lens<Target=Width> {
             },
             WindowEvent::MouseMove(x, _y) => {
                 if self.is_dragging {
-                    println!("Mouse Move");
-                    let pos_x = cx.cache.get_posx(cx.current());
-                    
+                    let cur_width = match self.width {
+                        Units::Pixels(px) => px,
+                        _ => 0.0
+                    };
+                
+                    let width = ((cx.bounds().x - cur_width) - (cx.bounds().x - x))
+                        .max(0.0);
+                    (self.on_update)(cx, Units::Pixels(width))
                 }
             },
             WindowEvent::MouseUp(button) if *button == MouseButton::Left => {
-                println!("Mouse Up");
                 self.is_dragging = false;
                 cx.focus_with_visibility(false);
                 cx.release();
+                cx.unlock_cursor_icon();
                 cx.with_current(Entity::root(), |cx| {
                     cx.set_pointer_events(true);
                 });
-            }
+            },
 
             _ => {}
         });
     }
 }
-impl<L: 'static> Splitter<L> where L: 'static + Lens<Target=Width> {
-    pub fn new(cx: &mut Context, initial_width: L) -> Handle<Self> {
-        View::build(Self { width: initial_width, is_dragging: false }, cx, |cx| {
-            Element::new(cx)
-                .height(Units::Stretch(1.0))
-                .width(Units::Pixels(2.0));
-        })
+impl<OnUpdate: 'static> Splitter<OnUpdate> where OnUpdate: Fn(&mut EventContext, Units) {
+    pub fn new(cx: &mut Context, initial_width: Units, on_update: OnUpdate) -> Handle<Self> {
+        View::build(Self { width: initial_width, is_dragging: false, on_update }, cx, |_| {})
+            .height(Units::Pixels(100.0))
     }
 }
 

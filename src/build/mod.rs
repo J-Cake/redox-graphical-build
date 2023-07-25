@@ -49,7 +49,7 @@ impl Builder {
                         })
                         .height(Auto);
 
-                        Table::with_widths(cx, ["Status", "Job", "Elapsed"], |cx, index, next_width| {
+                        Table::new(cx, ["Status", "Job", "Elapsed"], |cx, index, next_width| {
                             Label::new(cx, "Hello World")
                                 .width(next_width());
                             Label::new(cx, "Doin' something")
@@ -58,7 +58,7 @@ impl Builder {
                                 .width(next_width());
                             
                             index >= 5
-                        }, vec![Units::Stretch(1.0); 3])
+                        })
                             .class("field");
                         HStack::new(cx, |cx| {
                             RelativeTime::new(cx, AppState::started);

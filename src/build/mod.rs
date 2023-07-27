@@ -9,6 +9,7 @@ mod build;
 mod config;
 
 pub use config::*;
+pub use table::*;
 
 #[derive(Lens)]
 pub struct Builder {
@@ -49,16 +50,12 @@ impl Builder {
                         })
                         .height(Auto);
 
-                        Table::new(cx, ["Status", "Job", "Elapsed"], |cx, index, next_width| {
-                            Label::new(cx, "Hello World")
-                                .width(next_width());
-                            Label::new(cx, "Doin' something")
-                                .width(next_width());
-                            Label::new(cx, "Bye World")
-                                .width(next_width());
-                            
-                            index >= 5
-                        })
+                        Table::new(cx, ["Status", "Job", "Elapsed"], vec![
+                            TableRowBuilder::new()
+                                .add_column("Status", |cx| {
+                                    Label::new(cx, "Hello World!");
+                                })
+                        ])
                             .class("field");
                         HStack::new(cx, |cx| {
                             RelativeTime::new(cx, AppState::started);

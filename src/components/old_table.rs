@@ -1,29 +1,34 @@
-use std::ops::Deref;
-use std::sync::Mutex;
-use std::sync::Arc;
-use std::rc::Rc;
 use vizia::{prelude::*, ICON_CHEVRON_DOWN};
 
 type WidthList = Vec<Width>;
 type Width = Units;
 
-struct Row(WidthList);
-impl Row {
-    fn new<Body, Widths>(cx: &mut Context, body: Body, widths: Widths) -> Handle<Self>
+struct Row<Columns>
+where
+    Columns: Lens<Target=Vec<Column>>
+{ 
+    columns: Columns 
+}
+
+impl<Columns> Row<Columns>
+where
+    Columns: 'static + Lens<Target=Vec<Column>>
+{
+    fn new<Body>(cx: &mut Context, columns: Columns, body: Body) -> Handle<Self>
     where
         Body: FnMut(&mut Context),
-        Widths: IntoIterator<Item=Width>
     {
-        let this = Self(widths.into_iter().collect())
-            .build(cx, body)
+        View::build(Self { columns }, cx, |cx| {
+            
+        })
             .role(Role::Row)
-            .layout_type(LayoutType::Row);
-
-        return this;
+            .layout_type(LayoutType::Row)
     }
 }
 
-impl View for Row {
+impl<Columns> View for Row<Columns>
+where
+    Columns: 'static + Lens<Target=Vec<Column>> {
     fn element(&self) -> Option<&'static str> {
         Some("table-row")
     }
@@ -35,7 +40,7 @@ pub enum TableEvent {
     MoveColumn { column: usize, index: usize },
 }
 
-#[derive(Debug, Clone, Lens, Data)]
+#[derive(Debug, Clone, Data)]
 pub struct Column {
     pub heading: String,
     width: Width,
@@ -67,84 +72,39 @@ impl View for Table {
     }
 }
 
-impl Table {
-    pub fn with_widths<'a, Headers, Body, Widths>(
-        cx: &mut Context,
-        headers: Headers,
-        body: Body,
-        widths: Widths,
-    ) -> Handle<Self>
-    where
-        Headers: IntoIterator<Item = &'a str>,
-        Body: 'static + Fn(&mut Context, usize, &mut dyn FnMut() -> Units) -> bool,
-        Widths: IntoIterator<Item = Units>,
-    {
-        let widths = widths.into_iter();
-        let headers: Vec<String> = headers.into_iter().map(|i| i.to_owned()).collect();
+pub struct TableCell {}
 
-        View::build(
-            Self {
-                columns: widths
-                    .zip(headers.iter().cloned())
-                    .enumerate()
-                    .map(|(a, (width, heading))| Column {
-                        heading,
-                        width,
-                        sort_index: a,
-                    })
-                    .collect(),
-            },
-            cx,
-            move |cx| {
-                let body = Rc::new(body);
-                let body = Rc::clone(&body);
-
-                Binding::new(cx, Self::columns, move |cx, widths| {
-                    let body = Rc::clone(&body);
-                    let columns = widths.get(cx);
-                    let widths = Rc::new(columns.iter().map(|i| i.width).collect::<Vec<Units>>());
-
-                    let widths = Rc::clone(&widths);
-                    Row::new(cx, |cx| {
-                        List::new(cx, Self::columns, |cx, a, column| {
-                            let column: Column = column.get(cx);
-                            TableHeaderColumn::new(cx, column.heading)
-                                .width(widths[a])
-                                .on_build(move |e| e.emit(TableEvent::ResizeColumn {
-                                    column: a,
-                                    new_size: Units::Pixels(e.bounds().w)
-                                }));
-                            Splitter::new(cx, column.width, move |e: &mut EventContext, width: Units| e.emit(TableEvent::ResizeColumn { 
-                                column: a, 
-                                new_size: width
-                            }));
-                        })
-                        .layout_type(LayoutType::Row);
-                    }, Rc::clone(&widths).deref().clone())
-                    .class("table-header");
-
-                    ScrollView::new(cx, 0.0, 0.0, false, true, move |cx| {})
-                        .class("table-contents");
-                })
-            },
-        )
+impl View for TableCell {
+    fn element(&self) -> Option<&'static str> {
+        Some("table-cell")
     }
+}
 
-    pub fn new<'a, Headers, Body>(cx: &mut Context, headers: Headers, body: Body) -> Handle<Self>
+impl Table {
+    pub fn new<'a, Headers, Columns, Body>(cx: &mut Context, headers: Headers, body: Body) -> Handle<Self>
     where
         Headers: IntoIterator<Item = &'a str>,
-        Body: 'static + Fn(&mut Context, usize, &mut dyn FnMut() -> Units) -> bool,
+        Columns: 'static + Lens<Target=Vec<Column>>,
+        Body: 'static + Fn(&mut Context, usize) -> Option<Vec<Handle<'static, TableColumn>>>
     {
-        let mut len = 0usize;
-        let mut new_headers = vec![];
-
-        for i in headers.into_iter() {
-            new_headers.push(i);
-            len += 1;
-        }
-
-        let widths = vec![Units::Stretch(1.0); len];
-        Table::with_widths(cx, new_headers, body, widths)
+        View::build(Self {
+            columns: headers.into_iter()
+                .enumerate()
+                .map(|(a, i)| Column {
+                    heading: i.to_owned(),
+                    sort_index: a,
+                    width: Units::Stretch(1.0)
+                })
+                .collect()
+        }, cx, |cx| {
+            Row::new(cx, Self::columns, |cx| {
+                
+            });
+            
+            ScrollView::new(cx, 0.0, 0.0, false, true, |cx| {
+                
+            });
+        })
     }
 }
 
